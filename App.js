@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const BooksRoutes =require('./Routes/Books')
+const userRoutes = require('./Routes/User');
 
 // Connexion à MongoDB
 mongoose.connect('mongodb+srv://Gwiffith:6mG0VBpUqKVKYf3l@cluster0.9gpg8.mongodb.net/nomDeMaBase?retryWrites=true&w=majority', {
@@ -23,6 +24,7 @@ app.use(cors({
 app.use(express.json());
 
 app.use('/api/books', BooksRoutes);
+app.use('/api/auth', userRoutes)
 
 // Exporter l'application
 module.exports = app;
