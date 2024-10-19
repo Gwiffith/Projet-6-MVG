@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const express = require('express');
+const path = require('path');
 const app = express();
 const cors = require('cors');
 const BooksRoutes =require('./Routes/Books')
@@ -25,6 +26,7 @@ app.use(express.json());
 
 app.use('/api/books', BooksRoutes);
 app.use('/api/auth', userRoutes)
+app.use('/Images', express.static(path.join(__dirname, 'Images')));
 
 // Exporter l'application
 module.exports = app;
