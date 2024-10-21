@@ -1,4 +1,7 @@
-const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt'); // Import de bcrypt pour le hachage des mots de passe
+const jwt = require('jsonwebtoken'); // Import de jsonwebtoken pour les tokens
+const User = require('../Models/User'); // Import de ton modèle User (chemin à ajuster si nécessaire)
+
 
 exports.signup = (req, res, next) => {
     bcrypt.hash(req.body.password, 10)
