@@ -76,3 +76,52 @@ exports.deleteBook = (req, res, next) => {
         res.status(400).json({ error });
       });
   };
+
+  exports.rateBook = (req, res, next) => {
+    const userId = req.auth.userId;
+    const bookId = req.params.id;
+    const grade = req.body.grade;
+  
+    if (!grade || grade < 0 || grade > 5) {
+      return res.status(400).json({ error: 'La note doit être comprise entre 0 et 5.' });
+    }
+  
+    Book.findOne({ _id: bookId })
+      .then(book => {
+        if (!book) {
+          return res.status(404).json({ error: 'Livre non trouvé' });
+        }
+  
+        const alreadyRated = book.ratings.find(rating => rating.userId === userId);
+        if (alreadyRated) {
+          return res.status(400).json({ error: 'Vous avez déjà noté ce livre.' });
+        }
+  
+        const newRating = { userId, grade };
+        book.ratings.push(newRating);
+  
+        const totalRatings = book.ratings.length;
+        const sumRatings = book.ratings.reduce((sum, rating) => sum + rating.grade, 0);
+        book.averageRating = sumRatings / totalRatings;
+  
+        return book.save()
+          .then(() => {
+            const bookWithId = { ...book._doc, id: book._id };
+            delete bookWithId._id;
+            res.status(200).json({ message: 'Note ajoutée avec succès', book: bookWithId });
+          })
+          .catch(error => res.status(500).json({ error }));
+      })
+      .catch(error => res.status(500).json({ error }));
+  };
+  
+  
+
+// Contrôleur pour obtenir les livres les mieux notés
+exports.getBestRatedBooks = (req, res, next) => {
+  Book.find()
+    .sort({ averageRating: -1 }) // Trier les livres par note moyenne décroissante
+    .limit(3) // Limiter à 3 livres
+    .then(books => res.status(200).json(books)) // Renvoie les livres en réponse
+    .catch(error => res.status(400).json({ error })); // En cas d'erreur
+};
