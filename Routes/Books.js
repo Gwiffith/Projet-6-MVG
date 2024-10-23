@@ -23,7 +23,7 @@ router.put('/:id', auth, multer, booksCtrl.modifyBook);
 router.delete('/:id', auth, booksCtrl.deleteBook);
 
 // Route POST pour noter un livre (authentification requise)
-router.post('/:id/rating', auth, booksCtrl.rateBook);
+router.post('/:id/rating', auth, multer, booksCtrl.rateBook);
 
 
 

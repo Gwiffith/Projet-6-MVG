@@ -48,23 +48,22 @@ exports.deleteBook = (req, res, next) => {
     Book.findOne({ _id: req.params.id})
       .then(book => {
         if (book.userId != req.auth.userId) {
-          res.status(401).json({message: 'Not Authorized'});
+          res.status(403).json({message: 'Not Authorized'});
         } else {
           const filename = book.imageUrl.split('/Images/')[1];
           fs.unlink(`Images/${filename}`, ()=> {
             Book.deleteOne({ _id: req.params.id })
             .then(() => { res.status(200).json({message: 'Objet supprimé !'})})
-            .catch(error => res.status(401).json({ error }));
+            .catch(error => res.status(400).json({ error }));
             });
         }
       })
     .catch( error => {
-      res.status(500).json({ error });
+      res.status(400).json({ error });
     });
 };
 
   exports.getAllBooks = (req, res, next) => {
-    console.log('Requête GET reçue');
     Book.find()
       .then(books => {
         if (books.length === 0) {
@@ -78,43 +77,59 @@ exports.deleteBook = (req, res, next) => {
   };
 
   exports.rateBook = (req, res, next) => {
+    
     const userId = req.auth.userId;
     const bookId = req.params.id;
-    const grade = req.body.grade;
+    const rating = req.body.rating; // Le frontend envoie `rating` et non `grade`
   
-    if (!grade || grade < 0 || grade > 5) {
+    // Vérifiez si la note est bien entre 0 et 5
+    if (!rating || rating < 0 || rating > 5) {
       return res.status(400).json({ error: 'La note doit être comprise entre 0 et 5.' });
     }
   
+    // Rechercher le livre par son ID
     Book.findOne({ _id: bookId })
       .then(book => {
         if (!book) {
-          return res.status(404).json({ error: 'Livre non trouvé' });
+          return res.status(400).json({ error: 'Livre non trouvé.' });
         }
   
+        // Vérifier si l'utilisateur a déjà noté ce livre
         const alreadyRated = book.ratings.find(rating => rating.userId === userId);
         if (alreadyRated) {
           return res.status(400).json({ error: 'Vous avez déjà noté ce livre.' });
         }
   
-        const newRating = { userId, grade };
-        book.ratings.push(newRating);
-  
+        // Ajouter la nouvelle note
+        const newRating = { userId, grade: rating };
+        book.ratings.push(newRating)
+        
+        // Calcul de la note moyenne
         const totalRatings = book.ratings.length;
         const sumRatings = book.ratings.reduce((sum, rating) => sum + rating.grade, 0);
         book.averageRating = sumRatings / totalRatings;
+
   
+        // Sauvegarder le livre avec la nouvelle note
         return book.save()
           .then(() => {
             const bookWithId = { ...book._doc, id: book._id };
-            delete bookWithId._id;
-            res.status(200).json({ message: 'Note ajoutée avec succès', book: bookWithId });
-          })
-          .catch(error => res.status(500).json({ error }));
-      })
-      .catch(error => res.status(500).json({ error }));
-  };
+            delete bookWithId._id; // Supprime l'ancien champ _id pour correspondre au frontend
   
+            res.status(200).json(
+              bookWithId
+            );
+          })
+          .catch(error => {
+            console.error('Erreur lors de la sauvegarde du livre:', error);
+            res.status(400).json({ error: 'Erreur lors de la sauvegarde du livre.' });
+          });
+      })
+      .catch(error => {
+        console.error('Erreur lors de la récupération du livre:', error);
+        res.status(400).json({ error: 'Erreur lors de la récupération du livre.' });
+      });
+  };
   
 
 // Contrôleur pour obtenir les livres les mieux notés
