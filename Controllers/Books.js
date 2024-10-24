@@ -80,7 +80,7 @@ exports.deleteBook = (req, res, next) => {
     
     const userId = req.auth.userId;
     const bookId = req.params.id;
-    const rating = req.body.rating; // Le frontend envoie `rating` et non `grade`
+    const rating = req.body.rating; 
   
     // Vérifiez si la note est bien entre 0 et 5
     if (!rating || rating < 0 || rating > 5) {
@@ -105,9 +105,12 @@ exports.deleteBook = (req, res, next) => {
         book.ratings.push(newRating)
         
         // Calcul de la note moyenne
-        const totalRatings = book.ratings.length;
-        const sumRatings = book.ratings.reduce((sum, rating) => sum + rating.grade, 0);
-        book.averageRating = sumRatings / totalRatings;
+      const totalRatings = book.ratings.length;
+      const sumRatings = book.ratings.reduce((sum, rating) => sum + rating.grade, 0);
+      book.averageRating = (sumRatings / totalRatings).toFixed(1); // Arrondir à une décimale
+
+      // Convertir `averageRating` en nombre
+      book.averageRating = parseFloat(book.averageRating);
 
   
         // Sauvegarder le livre avec la nouvelle note
