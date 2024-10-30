@@ -1,3 +1,4 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const express = require('express');
 const path = require('path');
@@ -6,10 +7,19 @@ const cors = require('cors');
 const BooksRoutes =require('./Routes/Books')
 const userRoutes = require('./Routes/User');
 
+// Récupération des identifiants et de l'URI de base
+const username = process.env.DB_USERNAME;
+const password = encodeURIComponent(process.env.DB_PASSWORD); // Encodage du mot de passe
+const baseUri = process.env.MONGODB_URI;
+
+
+// Construction de l'URI complet avec identifiants
+const fullUri = `mongodb+srv://${username}:${password}@${baseUri}`;
+
 // Connexion à MongoDB
-mongoose.connect('mongodb+srv://Gwiffith:6mG0VBpUqKVKYf3l@cluster0.9gpg8.mongodb.net/nomDeMaBase?retryWrites=true&w=majority', {
+mongoose.connect(fullUri, {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
 })
 .then(() => console.log('Connexion à MongoDB réussie !'))
 .catch(error => console.log('Connexion à MongoDB échouée :', error));
